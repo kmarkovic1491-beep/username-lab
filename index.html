@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b12">
+<title>Username Lab — Discord Name Generator</title>
+<style>
+:root{color-scheme:dark;--bg:#090b12;--panel:#111522;--panel2:#171d2d;--line:#283149;--text:#f3f5fb;--muted:#9aa5bd;--accent:#8b7cff;--good:#7ee0b0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#25204b 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{width:min(920px,calc(100% - 28px));margin:0 auto;padding:42px 0 64px}.top{display:flex;align-items:center;gap:12px;margin-bottom:30px}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#a394ff,#6554df);display:grid;place-items:center;font-weight:900;font-size:19px;box-shadow:0 8px 30px #7462ff40}.brand{font-weight:800;letter-spacing:.2px}.subbrand{color:var(--muted);font-size:12px}
+.hero{text-align:center;margin:0 auto 28px;max-width:650px}.eyebrow{color:#b6adff;font-size:11px;letter-spacing:2px;font-weight:800}.hero h1{font-size:clamp(32px,6vw,50px);line-height:1.05;margin:10px 0 12px;letter-spacing:-1.7px}.hero p{color:var(--muted);margin:0}
+.panel{background:linear-gradient(180deg,#141a2a,#101522);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 20px 70px #0005}.section-title{font-weight:750;margin:0 0 13px}.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.mode{border:1px solid var(--line);background:#0c111d;color:var(--muted);padding:14px 8px;border-radius:12px;text-align:center;cursor:pointer;font:inherit}.mode strong{display:block;color:inherit;font-size:17px}.mode span{font-size:11px}.mode.active{background:#272247;border-color:#897cff;color:#fff;box-shadow:inset 0 0 0 1px #897cff55}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}.count{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px}.count select{background:#0c111d;border:1px solid var(--line);color:var(--text);padding:10px;border-radius:10px}.primary{border:0;border-radius:11px;padding:12px 20px;background:linear-gradient(135deg,#9b8cff,#6c5ce7);color:white;font-weight:800;cursor:pointer;flex:1;min-width:170px}.primary:active{transform:scale(.99)}
+.results-head{display:flex;justify-content:space-between;align-items:center;margin:25px 0 12px}.results-head h2{font-size:16px;margin:0}.muted{color:var(--muted);font-size:12px}.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0b101b;border:1px solid var(--line);border-radius:12px;padding:12px 13px;min-width:0}.username{font-weight:750;letter-spacing:.3px;overflow-wrap:anywhere}.actions{display:flex;gap:6px}.small{border:1px solid var(--line);background:#171e2e;color:#dce2f2;border-radius:8px;padding:7px 9px;cursor:pointer;font-size:12px}.empty{grid-column:1/-1;text-align:center;padding:26px;color:var(--muted);border:1px dashed var(--line);border-radius:12px}.note{margin-top:18px;padding:14px 15px;border-radius:12px;background:#211d35;border:1px solid #40386b;color:#c8c1ff;font-size:12px}.note strong{color:#fff}.foot{text-align:center;color:#707b93;font-size:11px;margin-top:25px}
+@media(max-width:560px){main{padding-top:25px}.panel{padding:16px}.modes{grid-template-columns:repeat(2,1fr)}.results{grid-template-columns:1fr}.hero{margin-bottom:22px}.controls{align-items:stretch}.count{justify-content:space-between;width:100%}}
+</style>
+</head>
+<body><main>
+<header class="top"><div class="logo">U</div><div><div class="brand">USERNAME LAB</div><div class="subbrand">DISCORD NAME GENERATOR</div></div></header>
+<section class="hero"><div class="eyebrow">FIND YOUR NEXT HANDLE</div><h1>Short names.<br>Fresh ideas.</h1><p>Generate clean 3- and 4-character username ideas in seconds.</p></section>
+<section class="panel">
+<h2 class="section-title">Choose a format</h2>
+<div class="modes" role="group" aria-label="Username format">
+<button class="mode active" data-mode="4c"><strong>4C</strong><span>4 characters</span></button>
+<button class="mode" data-mode="4l"><strong>4L</strong><span>4 letters</span></button>
+<button class="mode" data-mode="3c"><strong>3C</strong><span>3 characters</span></button>
+<button class="mode" data-mode="3l"><strong>3L</strong><span>3 letters</span></button>
+</div>
+<div class="controls"><label class="count">How many <select id="amount"><option>10</option><option selected>20</option><option>30</option></select></label><button class="primary" id="generate">Generate usernames ↗</button></div>
+<div class="results-head"><h2>Your ideas</h2><span class="muted" id="counter">0 generated</span></div>
+<div class="results" id="results"><div class="empty">Choose a format and tap Generate.</div></div>
+<div class="note"><strong>Availability note:</strong> These are generated username ideas, not live availability results. Discord does not provide a public official endpoint for checking arbitrary usernames. This page will never label a name “available” without a trustworthy confirmation. No proxies, account tokens, or rate-limit bypasses are used.</div>
+</section>
+<div class="foot">USERNAME LAB · Runs in your browser · No account login needed</div>
+</main>
+<script>
+const letters="abcdefghijklmnopqrstuvwxyz";
+const chars="abcdefghijklmnopqrstuvwxyz0123456789";
+let mode="4c",generated=[];
+const modes=[...document.querySelectorAll(".mode")];
+modes.forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.mode;modes.forEach(x=>x.classList.toggle("active",x===b));}));
+function makeName(){const len=mode.startsWith("3")?3:4;const pool=mode.endsWith("l")?letters:chars;let s="";for(let i=0;i<len;i++)s+=pool[Math.floor(Math.random()*pool.length)];return s;}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function render(){const root=document.getElementById("results");document.getElementById("counter").textContent=generated.length+" generated";root.innerHTML=generated.map((name,i)=>'<div class="item"><span class="username">'+escapeHtml(name)+'</span><div class="actions"><button class="small" data-copy="'+i+'">Copy</button></div></div>').join("")||'<div class="empty">No names yet.</div>';root.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{const name=generated[Number(b.dataset.copy)];try{await navigator.clipboard.writeText(name);b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1000);}catch{b.textContent="Select";}}));}
+document.getElementById("generate").addEventListener("click",()=>{const amount=Number(document.getElementById("amount").value);const set=new Set();let tries=0;while(set.size<amount&&tries<amount*30){set.add(makeName());tries++;}generated=[...set];render();});
+</script></body></html>
