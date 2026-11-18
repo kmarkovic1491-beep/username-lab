@@ -18,7 +18,7 @@ main{width:min(920px,calc(100% - 28px));margin:0 auto;padding:42px 0 64px}.top{d
 </head>
 <body><main>
 <header class="top"><div class="logo">U</div><div><div class="brand">USERNAME LAB</div><div class="subbrand">DISCORD NAME GENERATOR</div></div></header>
-<section class="hero"><div class="eyebrow">FIND YOUR NEXT HANDLE</div><h1>Short names.<br>Fresh ideas.</h1><p>Generate clean 3- and 4-character username ideas in seconds.</p></section>
+<section class="hero"><div class="eyebrow">FIND YOUR NEXT HANDLE</div><h1>Short names.<br>Fresh ideas.</h1><p>Generate username ideas from 3 to 20 characters in seconds.</p></section>
 <section class="panel">
 <h2 class="section-title">Choose a format</h2>
 <div class="modes" role="group" aria-label="Username format">
@@ -27,7 +27,7 @@ main{width:min(920px,calc(100% - 28px));margin:0 auto;padding:42px 0 64px}.top{d
 <button class="mode" data-mode="3c"><strong>3C</strong><span>3 characters</span></button>
 <button class="mode" data-mode="3l"><strong>3L</strong><span>3 letters</span></button>
 </div>
-<div class="controls"><label class="count">How many <select id="amount"><option>10</option><option selected>20</option><option>30</option></select></label><button class="primary" id="generate">Generate usernames ↗</button></div>
+<div class="controls"><label class="count">How many <select id="amount"><option>10</option><option selected>20</option><option>30</option><option>50</option></select><label class="count">Length <select id="length"><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>12</option><option>16</option><option>20</option></select></label></label><button class="primary" id="generate">Generate usernames ↗</button></div>
 <div class="results-head"><h2>Your ideas</h2><span class="muted" id="counter">0 generated</span></div>
 <div class="results" id="results"><div class="empty">Choose a format and tap Generate.</div></div>
 <div class="note"><strong>Availability note:</strong> These are generated username ideas, not live availability results. Discord does not provide a public official endpoint for checking arbitrary usernames. This page will never label a name “available” without a trustworthy confirmation. No proxies, account tokens, or rate-limit bypasses are used.</div>
@@ -40,7 +40,7 @@ const chars="abcdefghijklmnopqrstuvwxyz0123456789";
 let mode="4c",generated=[];
 const modes=[...document.querySelectorAll(".mode")];
 modes.forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.mode;modes.forEach(x=>x.classList.toggle("active",x===b));}));
-function makeName(){const len=mode.startsWith("3")?3:4;const pool=mode.endsWith("l")?letters:chars;let s="";for(let i=0;i<len;i++)s+=pool[Math.floor(Math.random()*pool.length)];return s;}
+function makeName(){const len=Number(document.getElementById("length").value);const pool=mode.endsWith("l")?letters:chars;let s="";for(let i=0;i<len;i++)s+=pool[Math.floor(Math.random()*pool.length)];return s;}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){const root=document.getElementById("results");document.getElementById("counter").textContent=generated.length+" generated";root.innerHTML=generated.map((name,i)=>'<div class="item"><span class="username">'+escapeHtml(name)+'</span><div class="actions"><button class="small" data-copy="'+i+'">Copy</button></div></div>').join("")||'<div class="empty">No names yet.</div>';root.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{const name=generated[Number(b.dataset.copy)];try{await navigator.clipboard.writeText(name);b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1000);}catch{b.textContent="Select";}}));}
 document.getElementById("generate").addEventListener("click",()=>{const amount=Number(document.getElementById("amount").value);const set=new Set();let tries=0;while(set.size<amount&&tries<amount*30){set.add(makeName());tries++;}generated=[...set];render();});
