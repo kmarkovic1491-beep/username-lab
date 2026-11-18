@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: username-lab-proxy-test
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: proxy-test-server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: ALLOWED_ORIGIN
+        value: https://kmarkovic1491-beep.github.io
+      - key: PROXY_URL
+        sync: false
