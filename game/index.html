@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#090d18">
+<title>Neon Coast — City Stories</title>
+<style>
+:root{color-scheme:dark;--cyan:#55e7e2;--pink:#ff5ca8;--panel:rgba(8,14,27,.88)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d18;color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}
+#stage{position:fixed;inset:0;background:#111a28;overflow:hidden}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+#hud{position:absolute;inset:0;pointer-events:none}
+.top{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.brand,.mission,.cash,.menu{background:var(--panel);border:1px solid #ffffff20;border-radius:14px;padding:10px 13px;backdrop-filter:blur(10px);box-shadow:0 8px 28px #0005}
+.brand strong{letter-spacing:2px;color:var(--cyan);font-size:13px}.brand small{display:block;color:#a9b7c9;font-size:10px;margin-top:3px}
+.mission{max-width:min(52vw,390px);font-size:12px;line-height:1.4}.mission b{color:#fff}.mission span{display:block;color:#aab8c9;margin-top:3px}
+.cash{color:#a7ffcf;font-weight:800;font-size:13px;white-space:nowrap}
+#buttons{position:absolute;right:12px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:8px;pointer-events:auto}
+button{font:inherit;color:white;background:#17263a;border:1px solid #ffffff35;border-radius:12px;padding:10px 13px;font-weight:700;cursor:pointer}
+button:active{transform:scale(.96);background:#24415b}
+#controls{position:absolute;left:14px;bottom:max(18px,env(safe-area-inset-bottom));display:grid;grid-template-columns:52px 52px 52px;grid-template-rows:52px 52px;gap:5px;pointer-events:auto}
+.ctrl{border-radius:15px;background:#101d2dcc;border:1px solid #ffffff40;font-size:20px;touch-action:none;user-select:none}
+#up{grid-column:2}#left{grid-column:1;grid-row:2}#down{grid-column:2;grid-row:2}#right{grid-column:3;grid-row:2}
+#start,#settings,#story{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#08101eeF,#0b1625eF);padding:22px;pointer-events:auto}
+.dialog{width:min(560px,100%);max-height:90%;overflow:auto;background:#0d1929;border:1px solid #ffffff24;border-radius:24px;padding:26px;box-shadow:0 24px 80px #0009}
+.eyebrow{color:var(--cyan);letter-spacing:3px;font-size:11px;font-weight:900}
+h1{font-size:clamp(32px,8vw,58px);line-height:.95;margin:12px 0 14px;letter-spacing:-2px}
+p{color:#b6c5d6;line-height:1.6;font-size:14px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
+.primary{background:linear-gradient(120deg,#11aeb5,#3477c9);border:0;padding:13px 20px}
+.secondary{background:#1b2b40}
+.setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 0;border-bottom:1px solid #ffffff18}
+.setting-row small{display:block;color:#a8b7c9;margin-top:4px}
+#toast{position:absolute;left:50%;top:24%;transform:translateX(-50%);background:#081423eF;border:1px solid #55e7e280;border-radius:14px;padding:12px 17px;font-size:13px;text-align:center;max-width:85%;display:none}
+#rotateHint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;color:#d8e9f4;background:#0a1423d9;padding:8px 12px;border-radius:20px;display:none}
+#stage.rotate-mode{position:fixed;inset:auto;width:100dvh;height:100vw;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center}
+.hidden{display:none!important}
+@media(orientation:portrait){#stage.rotate-mode #rotateHint{display:block}}
+@media(orientation:landscape){#controls{grid-template-columns:46px 46px 46px;grid-template-rows:46px 46px}.ctrl{font-size:17px}}
+</style>
+</head>
+<body>
+<div id="stage">
+<canvas id="game"></canvas>
+<div id="hud">
+ <div class="top">
+  <div class="brand"><strong>NEON COAST</strong><small>CITY STORIES · CHAPTER 01</small></div>
+  <div class="mission"><b id="missionTitle">Free roam</b><span id="missionText">Explore the coast and find your next stop.</span></div>
+  <div class="cash" id="cash">$ 250</div>
+ </div>
+ <div id="controls">
+  <button class="ctrl" id="up" aria-label="Accelerate">▲</button>
+  <button class="ctrl" id="left" aria-label="Turn left">◀</button>
+  <button class="ctrl" id="down" aria-label="Reverse">▼</button>
+  <button class="ctrl" id="right" aria-label="Turn right">▶</button>
+ </div>
+ <div id="buttons">
+  <button id="mapBtn">MAP</button><button id="pauseBtn">Ⅱ</button>
+ </div>
+ <div id="toast"></div><div id="rotateHint">Rotate your phone for a wider view</div>
+</div>
+<div id="start">
+ <div class="dialog">
+  <div class="eyebrow">AN ORIGINAL OPEN-CITY ADVENTURE</div>
+  <h1>NEON<br><span style="color:var(--cyan)">COAST</span></h1>
+  <p>Welcome to Solara Bay. Explore a bright coastal city, cruise through downtown, meet locals and help rebuild the old Harbor Garage. Your story starts with one small delivery.</p>
+  <div class="actions"><button class="primary" id="playBtn">▶ PLAY</button><button class="secondary" id="settingsBtn">⚙ SETTINGS</button><button class="secondary" id="storyBtn">STORY</button></div>
+  <p style="font-size:11px;margin-top:18px">Touch the arrows to drive · Keyboard: WASD or arrow keys · Original prototype</p>
+ </div>
+</div>
+<div id="settings" class="hidden">
+ <div class="dialog">
+  <div class="eyebrow">GAME OPTIONS</div><h1 style="font-size:38px">Settings</h1>
+  <div class="setting-row"><div><b>Landscape screen</b><small>Rotate the game view for a wider layout.</small></div><button id="rotateBtn">OFF</button></div>
+  <div class="setting-row"><div><b>Sound effects</b><small>Simple game sound cues.</small></div><button id="soundBtn">ON</button></div>
+  <div class="setting-row"><div><b>Driving help</b><small>Gentler steering and acceleration.</small></div><button id="assistBtn">ON</button></div>
+  <div class="actions"><button class="primary" id="closeSettings">DONE</button></div>
+ </div>
+</div>
+<div id="story" class="hidden">
+ <div class="dialog">
+  <div class="eyebrow">THE STORY SO FAR</div><h1 style="font-size:38px">A city worth saving.</h1>
+  <p>Mara Vega has returned to Solara Bay after years away. Her family’s Harbor Garage is days from closing, and the neighborhood is changing faster than anyone can keep up with.</p>
+  <p>With her friend Nico, Mara takes on local jobs, uncovers who is behind a suspicious waterfront redevelopment deal, and brings the community together. Every completed job opens another part of the city.</p>
+  <p><b>Chapter 1 — The First Run:</b> Pick up a box of spare parts from the marina and bring it safely to Harbor Garage.</p>
+  <div class="actions"><button class="primary" id="closeStory">BACK</button></div>
+ </div>
+</div>
+</div>
+<script>
+(()=>{
+const stage=document.getElementById('stage'),canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let W=0,H=0,dpr=1,running=false,paused=false,rotate=false,sound=true,assist=true,money=250,mission=0,toastTimer=0;
+const world={w:2200,h:1600};
+const player={x:430,y:420,a:0,speed:0};
+const keys={up:false,down:false,left:false,right:false};
+const missions=[
+ {title:'The First Run',text:'Pick up the spare parts at the marina.',x:1740,y:360,done:'Parts collected! Now take them to Harbor Garage.',reward:100},
+ {title:'Back to the Garage',text:'Bring the parts to Harbor Garage.',x:430,y:420,done:'The garage is back in business. Nico has another idea.',reward:150},
+ {title:'A Friendly Favor',text:'Visit the boardwalk café and meet Nico.',x:1450,y:1180,done:'Nico found a strange planning notice. Check the old town hall.',reward:175},
+ {title:'The Paper Trail',text:'Head to the old town hall.',x:900,y:850,done:'You found the missing public record. The neighborhood meeting is tomorrow!',reward:250},
+ {title:'A New Beginning',text:'Return to Harbor Garage to plan the next chapter.',x:430,y:420,done:'Chapter 1 complete! Solara Bay is just getting started.',reward:300}
+];
+const buildings=[
+[80,80,270,190],[480,70,250,220],[830,70,300,180],[1250,70,260,200],[1650,80,340,180],
+[80,650,250,240],[480,660,260,190],[830,650,250,210],[1250,660,280,220],[1700,650,300,230],
+[80,1110,280,260],[500,1100,270,250],[900,1110,280,250],[1300,1100,250,260],[1700,1110,280,250]
+];
+function resize(){dpr=Math.min(devicePixelRatio||1,2);const r=canvas.getBoundingClientRect();W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resize).observe(stage);resize();
+function showToast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',2600)}
+function updateHud(){const m=missions[Math.min(mission,missions.length-1)];$('missionTitle').textContent=mission>=missions.length?'Chapter 1 complete':m.title;$('missionText').textContent=mission>=missions.length?'Free roam — explore Solara Bay.':m.text;$('cash').textContent='$ '+money.toLocaleString()}
+function open(id){$(id).classList.remove('hidden')}function close(id){$(id).classList.add('hidden')}
+$('playBtn').onclick=()=>{close('start');running=true;paused=false;updateHud();showToast('Mission started: '+missions[0].title)};
+$('settingsBtn').onclick=()=>open('settings');$('storyBtn').onclick=()=>open('story');
+$('closeSettings').onclick=()=>close('settings');$('closeStory').onclick=()=>close('story');
+$('rotateBtn').onclick=()=>{rotate=!rotate;stage.classList.toggle('rotate-mode',rotate);$('rotateBtn').textContent=rotate?'ON':'OFF';setTimeout(resize,100);if(rotate&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{});else if(!rotate&&screen.orientation?.unlock)screen.orientation.unlock();};
+$('soundBtn').onclick=()=>{sound=!sound;$('soundBtn').textContent=sound?'ON':'OFF'};
+$('assistBtn').onclick=()=>{assist=!assist;$('assistBtn').textContent=assist?'ON':'OFF'};
+$('pauseBtn').onclick=()=>{if(!running)return;paused=!paused;showToast(paused?'Paused':'Back on the road')};
+$('mapBtn').onclick=()=>showToast('Map: marina northeast · Harbor Garage southwest · Boardwalk southeast · Town Hall center');
+function bind(id,key){const el=$(id);const on=e=>{e.preventDefault();keys[key]=true};const off=e=>{e.preventDefault();keys[key]=false};el.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(v=>el.addEventListener(v,off))}
+bind('up','up');bind('down','down');bind('left','left');bind('right','right');
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','w'].includes(k))keys.up=true;if(['arrowdown','s'].includes(k))keys.down=true;if(['arrowleft','a'].includes(k))keys.left=true;if(['arrowright','d'].includes(k))keys.right=true;if(k==='escape')paused=!paused});
+window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(['arrowup','w'].includes(k))keys.up=false;if(['arrowdown','s'].includes(k))keys.down=false;if(['arrowleft','a'].includes(k))keys.left=false;if(['arrowright','d'].includes(k))keys.right=false});
+function rounded(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function drawWorld(){ctx.fillStyle='#263d42';ctx.fillRect(0,0,world.w,world.h);
+ // sea and beach
+ ctx.fillStyle='#147b91';ctx.fillRect(1880,0,320,1600);ctx.fillStyle='#d0b77b';ctx.fillRect(1810,0,70,1600);
+ // roads
+ ctx.fillStyle='#343b46';for(let y of [330,590,1010,1370])ctx.fillRect(0,y,world.w,92);for(let x of [360,760,1170,1570])ctx.fillRect(x,0,100,world.h);
+ ctx.strokeStyle='#d8d2a4';ctx.lineWidth=3;ctx.setLineDash([24,22]);for(let y of [376,636,1056,1416]){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(world.w,y);ctx.stroke()}for(let x of [410,810,1220,1620]){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,world.h);ctx.stroke()}ctx.setLineDash([]);
+ // green lots and buildings
+ buildings.forEach((b,i)=>{rounded(b[0]-14,b[1]-14,b[2]+28,b[3]+28,16,i%2?'#41654f':'#4a7056');rounded(...b,10,i%3?'#687b8b':'#806f69');ctx.fillStyle='#b7d3d8';for(let wx=b[0]+22;wx<b[0]+b[2]-14;wx+=42)for(let wy=b[1]+22;wy<b[1]+b[3]-12;wy+=42)ctx.fillRect(wx,wy,17,13)});
+ // park
+ rounded(1020,390,360,190,24,'#4f885e');for(let i=0;i<14;i++){ctx.fillStyle='#286346';ctx.beginPath();ctx.arc(1050+(i*83)%300,420+(i*47)%140,12,0,Math.PI*2);ctx.fill()}
+ // labels
+ ctx.fillStyle='#ffffffbb';ctx.font='bold 18px system-ui';ctx.fillText('SOLARA BAY',40,40);ctx.font='12px system-ui';ctx.fillText('HARBOR GARAGE',385,465);ctx.fillText('MARINA',1710,300);ctx.fillText('BOARDWALK',1430,1150);ctx.fillText('TOWN HALL',870,820);
+}
+function drawMarker(x,y,label){ctx.strokeStyle='#5be8e0';ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,y,24+Math.sin(Date.now()/220)*4,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#5be8e0';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText(label,x,y-35);ctx.textAlign='left'}
+function frame(){requestAnimationFrame(frame);if(!W||!H)return;
+ if(running&&!paused){const accel=assist?.13:.18,turn=assist?.042:.052;if(keys.up)player.speed=Math.min(player.speed+accel,assist?4.2:5.4);else if(keys.down)player.speed=Math.max(player.speed-.16,-2.2);else player.speed*=.965;if(keys.left)player.a-=turn*(Math.abs(player.speed)/3+.3);if(keys.right)player.a+=turn*(Math.abs(player.speed)/3+.3);player.x+=Math.cos(player.a)*player.speed;player.y+=Math.sin(player.a)*player.speed;player.x=Math.max(30,Math.min(world.w-30,player.x));player.y=Math.max(30,Math.min(world.h-30,player.y));
+ const m=missions[Math.min(mission,missions.length-1)];if(mission<missions.length&&Math.hypot(player.x-m.x,player.y-m.y)<75){money+=m.reward;mission++;updateHud();showToast(m.done+'  +$'+m.reward)}
+ }
+ const camX=Math.max(0,Math.min(world.w-W,player.x-W/2)),camY=Math.max(0,Math.min(world.h-H,player.y-H/2));
+ ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(-camX,-camY);drawWorld();
+ if(mission<missions.length){const m=missions[mission];drawMarker(m.x,m.y,'★ NEXT STOP')}
+ // car
+ ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.a);rounded(-19,-11,38,22,7,'#ff5ca8');rounded(0,-8,11,16,4,'#a9e8f1');ctx.fillStyle='#fff2b0';ctx.fillRect(15,-8,5,5);ctx.fillRect(15,3,5,5);ctx.restore();
+ ctx.restore();
+ // minimap
+ const mw=112,mh=82,mx=W-mw-14,my=H-mh-90;rounded(mx-5,my-5,mw+10,mh+10,12,'#081423d9');ctx.fillStyle='#31484a';ctx.fillRect(mx,my,mw,mh);ctx.fillStyle='#65747d';for(let x=mx+18;x<mx+mw;x+=24)ctx.fillRect(x,my,6,mh);for(let y=my+15;y<my+mh;y+=22)ctx.fillRect(mx,y,mw,5);ctx.fillStyle='#ff5ca8';ctx.beginPath();ctx.arc(mx+player.x/world.w*mw,my+player.y/world.h*mh,4,0,Math.PI*2);ctx.fill();if(mission<missions.length){ctx.fillStyle='#5be8e0';ctx.beginPath();ctx.arc(mx+missions[mission].x/world.w*mw,my+missions[mission].y/world.h*mh,4,0,Math.PI*2);ctx.fill()}
+ if(!running){ctx.fillStyle='#ffffff22';ctx.fillRect(0,0,W,H)}
+ if(paused&&running){rounded(W/2-85,H/2-32,170,64,18,'#081423eF');ctx.fillStyle='white';ctx.font='bold 20px system-ui';ctx.textAlign='center';ctx.fillText('PAUSED',W/2,H/2+7);ctx.textAlign='left'}
+}
+updateHud();frame();
+})();
+</script>
+</body>
+</html>
